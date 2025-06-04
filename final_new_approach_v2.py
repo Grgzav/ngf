@@ -4,6 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from PIL import Image
 
+# test
 # ---- Company logo ----
 logo = Image.open('microsoft.png')
 st.image(logo, width=160)
