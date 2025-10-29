@@ -1,0 +1,11 @@
+role,Gf,Gc,WM,Speed,Conscientiousness,Agreeableness,AutonomyPref,R,I,A,S,E,C,notes
+Backend Software Engineer,0.6,0.0,0.6,0.0,0.6,0.0,0.2,0.1,0.6,-0.1,0.0,-0.1,0.2,Maps to O*NET Software Developers; high reasoning & working memory; moderate autonomy
+Frontend Software Engineer,0.0,0.0,0.0,0.6,0.0,0.0,0.3,-0.1,0.3,0.5,0.2,0.0,0.0,Maps to Web/Software Developers; higher speed & A interest; customer impact emphasis
+DevOps / SRE,0.6,0.0,0.6,0.6,0.6,0.0,0.1,0.2,0.5,-0.1,0.1,-0.1,0.3,"Maps to Sys Admins/Software Dev Ops; high speed, WM, conscientiousness"
+Information Security Eng.,0.6,0.0,0.6,0.0,0.6,-0.6,0.0,0.1,0.6,-0.2,0.0,-0.1,0.3,"O*NET: Information Security Analysts; high Gf/WM, stability values"
+Data Scientist,0.6,0.3,0.6,0.0,0.0,0.0,0.3,0.0,0.7,0.1,0.0,0.0,0.2,"O*NET: Data Scientists; high Gf/WM, investigative interests"
+ML Engineer,0.6,0.0,0.6,0.6,0.6,0.0,0.2,0.1,0.6,-0.1,0.0,0.0,0.3,Bridges Data Sci & Software Dev; high speed/WM
+Data Engineer,0.3,0.0,0.6,0.3,0.6,0.0,0.0,0.1,0.5,-0.1,0.0,0.0,0.4,"Maps to Database Admin/Architect; high conscientiousness, C interest"
+Simulation Engineer (FEA/CFD),0.6,0.0,0.6,0.0,0.6,0.0,0.0,0.2,0.6,-0.1,0.0,-0.1,0.3,"Maps to Mechanical Engineers; high Gf/WM, C/I interests"
+Manufacturing/Process Eng.,0.3,0.0,0.3,0.6,0.6,0.0,-0.2,0.4,0.2,-0.2,0.0,0.0,0.5,"Maps to Industrial Engineers; speed, conscientiousness, C/R interests"
+Technical Writer,0.0,0.3,0.3,0.0,0.6,0.3,-0.1,-0.1,0.3,0.4,0.2,0.0,0.4,"O*NET: Technical Writers; high conscientiousness, A/C interests"
