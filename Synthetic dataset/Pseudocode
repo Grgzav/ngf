@@ -1,0 +1,34 @@
+# Inputs: onet_df with columns:
+#  role, InductiveReasoning, DeductiveReasoning, PerceptualSpeed, ...
+#        Dependability, Cooperation, AttentionToDetail, ...
+#        R_interest, I_interest, ..., C_interest
+#        FreedomToDecide, StructuredWork, PaceByEquipment, DegreeOfAutomation, ImpactOfDecisions
+
+# Step 1: z-normalize each O*NET column across all roles
+Z = z_normalize(onet_df, cols=[all_onet_scales])
+
+# Step 2: cognitive composites
+Gf    = 0.70*Z['InductiveReasoning'] + 0.30*Z['DeductiveReasoning']
+Gc    = 0.70*Z['WrittenComp'] + 0.30*Z['OralComp']    # or include Expression variants
+WM    = 0.70*Z['Memorization'] + 0.30*Z['InformationOrdering']
+Speed = 0.70*Z['PerceptualSpeed'] + 0.30*Z['SpeedOfClosure']
+
+# Step 3: non-cognitive composites
+Conscientiousness = (0.50*Z['Dependability'] + 0.20*Z['AttentionToDetail'] +
+                     0.20*Z['Persistence'] + 0.10*Z['SelfControl'])
+Agreeableness     = 0.70*Z['Cooperation'] + 0.30*Z['ConcernForOthers']
+
+# Step 4: autonomy
+AutonomyPref = (0.45*Z['FreedomToDecide'] + 0.35*(-Z['StructuredWork']) +
+                0.20*Z['ImpactOfDecisions'] - 0.20*Z['PaceByEquipment'] -
+                0.10*Z['DegreeOfAutomation'])
+
+# Step 5: interests
+R, I, A, S, E, C = Z['R_interest'], Z['I_interest'], ..., Z['C_interest']
+
+# Step 6: cap priors (optional)
+for col in [Gf,Gc,WM,Speed,Conscientiousness,Agreeableness,AutonomyPref,R,I,A,S,E,C]:
+    col = col.clip(lower=-1.0, upper=+1.0)
+
+# Step 7: output per-role mean table
+role_means = concat_cols([...])  # as schema 7.1
