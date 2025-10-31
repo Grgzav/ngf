@@ -1,0 +1,176 @@
+import streamlit as st
+import pandas as pd
+import altair as alt
+import plotly.graph_objects as go
+
+# --- Page config & CSS ---
+st.set_page_config(page_title="Team Dashboard", layout="wide")
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+body {
+  background-color: #f4f4f4;
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+.card {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 12px;
+  margin-bottom: 12px;
+}
+.badge {
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+.badge--completed { background: #28a745; }
+.badge--inprogress { background: #ffc107; }
+.badge--notstarted { background: #dc3545; }
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.small-text { font-size: 0.9rem; }
+</style>
+""", unsafe_allow_html=True)
+
+# --- Sample Data ---
+projects = ["Authentication Module", "API Service", "UI Overhaul", "User Research"]
+categories = ["Planning", "Development", "Testing", "Deployment", "Research"]
+# Tasks DataFrame
+tasks = pd.DataFrame([
+    {"Task Name": "Design Login Flow",   "Category": "Planning",    "Project Name": "Authentication Module", "Assignee": "Alice Smith", "Status": "In Progress",  "Due Date": "2025-07-25"},
+    {"Task Name": "Implement API",       "Category": "Development", "Project Name": "API Service",             "Assignee": "Bob Johnson", "Status": "Completed",    "Due Date": "2025-07-20"},
+    {"Task Name": "Write Unit Tests",    "Category": "Testing",     "Project Name": "API Service",             "Assignee": "Carol Lee",   "Status": "In Progress",   "Due Date": "2025-07-27"},
+    {"Task Name": "Prep Presentation",   "Category": "Deployment",  "Project Name": "UI Overhaul",             "Assignee": "David Kim",    "Status": "Not Started",  "Due Date": "2025-07-30"},
+    {"Task Name": "Conduct UX Research", "Category": "Research",    "Project Name": "User Research",           "Assignee": "Eva Wong",     "Status": "Not Started",  "Due Date": "2025-08-02"},
+    {"Task Name": "Deploy to Staging",   "Category": "Deployment",  "Project Name": "Authentication Module",   "Assignee": "Alice Smith",  "Status": "In Progress",  "Due Date": "2025-07-28"},
+])
+
+# Performance Data: 12 weeks
+pred = [35, 50, 55, 60, 70, 80, 72, 85, 90, 80, 95, 82]
+actual = [sum(pred[i:i+4]) / 4 for i in range(0, len(pred), 4) for _ in range(4)]
+weeks = list(range(20, 32))
+workload_vals = [50, 65, 40, 75, 55, 60, 45, 70, 50, 65, 55, 80]
+performance = pd.DataFrame({
+    "Week": weeks,
+    "Predicted %": pred,
+    "Actual %": actual,
+    "Workload %": workload_vals
+})
+
+# Metrics
+hours_available = 52
+hours_required = 65
+fairness_score = 0.82
+insights = [
+    "Carol Lee is nearing capacity; consider reassigning tasks.",
+    "Team outperformed predictions in week 29—momentum is strong!",
+    "Schedule a UX workshop for Eva Wong to boost research speed."
+]
+
+# --- Layout ---
+col1, col2 = st.columns(2, gap="small")
+col3, col4 = st.columns(2, gap="small")
+
+# Top-Left: Task Overview
+with col1:
+    st.markdown('<div class="card"><div class="section-title">Recent Task Activity</div></div>', unsafe_allow_html=True)
+    header_html = (
+        '<div style="display:grid; grid-template-columns: 2fr 1fr 2fr 1fr 1fr 1fr; gap:8px; font-weight:600; margin-bottom:6px;">'
+        '<div>Task Name</div><div>Category</div><div>Project Name</div><div>Assignee</div><div>Status</div><div>Due Date</div>'
+        '</div>'
+    )
+    st.markdown(header_html, unsafe_allow_html=True)
+    for _, row in tasks.iterrows():
+        cls = {"Completed":"badge--completed","In Progress":"badge--inprogress","Not Started":"badge--notstarted"}[row["Status"]]
+        row_html = (
+            '<div style="display:grid; grid-template-columns: 2fr 1fr 2fr 1fr 1fr 1fr; gap:8px; align-items:center; margin-bottom:6px;">'
+            f'<div>{row["Task Name"]}</div>'
+            f'<div>{row["Category"]}</div>'
+            f'<div>{row["Project Name"]}</div>'
+            f'<div><small class="small-text">{row["Assignee"]}</small></div>'
+            f'<div><span class="badge {cls}">{row["Status"]}</span></div>'
+            f'<div><small class="small-text">{row["Due Date"]}</small></div>'
+            '</div>'
+        )
+        st.markdown(row_html, unsafe_allow_html=True)
+
+# Top-Right: Performance Overview with Dual Scales and Centered Toggles
+if 'show_pred' not in st.session_state:
+    st.session_state.show_pred = True
+if 'show_work' not in st.session_state:
+    st.session_state.show_work = False
+with col2:
+    st.markdown('<div class="card"><div class="section-title">Performance Overview</div></div>', unsafe_allow_html=True)
+    x_axis = alt.Axis(title='Week', values=weeks, labelAngle=0, domain=False, ticks=True)
+    y_left = alt.Axis(title='%', values=[0,25,50,75,100], grid=True, domain=False, ticks=True, format='.0f')
+    y_right = alt.Axis(title='Workload', orient='right', domain=False, ticks=True)
+
+    layers = []
+    if st.session_state.show_pred:
+        bars = alt.Chart(performance).mark_bar(color='#4C78A8', size=20).encode(
+            x=alt.X('Week:O', axis=x_axis),
+            y=alt.Y('Predicted %:Q', axis=y_left),
+            tooltip=['Week:O', alt.Tooltip('Predicted %:Q', format='.0f', title='Predicted %')]
+        )
+        layers.append(bars)
+    line_actual = alt.Chart(performance).mark_line(point=True, color='#F58518', size=3).encode(
+        x=alt.X('Week:O', axis=x_axis),
+        y=alt.Y('Actual %:Q', scale=alt.Scale(domain=[0,100]), axis=y_left),
+        tooltip=['Week:O', alt.Tooltip('Actual %:Q', format='.0f', title='Actual %')]
+    )
+    layers.append(line_actual)
+    if st.session_state.show_work:
+        line_work = alt.Chart(performance).mark_line(point=True, color='black', size=3).encode(
+            x=alt.X('Week:O', axis=x_axis),
+            y=alt.Y('Workload %:Q', scale=alt.Scale(domain=[0,100]), axis=y_right),
+            tooltip=['Week:O', alt.Tooltip('Workload %:Q', format='.0f', title='Workload %')]
+        )
+        layers.append(line_work)
+
+    combo = alt.layer(*layers).resolve_scale(y='independent').properties(height=250)
+    combo = combo.configure_axis(labelFontSize=14, titleFontSize=16).configure_view(stroke=None)
+    st.altair_chart(combo, use_container_width=True)
+
+    btn_cols = st.columns([1,2,2,1], gap="small")
+    # Centered toggle buttons below chart
+    with btn_cols[1]:
+        if st.button("Toggle Predicted %"):
+            st.session_state.show_pred = not st.session_state.show_pred
+    with btn_cols[2]:
+        if st.button("Toggle Workload %"):
+            st.session_state.show_work = not st.session_state.show_work
+
+    # Legend
+    st.markdown("""
+    <div style="display:flex;justify-content:center;margin-top:8px;font-size:14px;">
+      <div style="display:flex;align-items:center;margin-right:16px;"><div style="width:12px;height:12px;background-color:#4C78A8;margin-right:4px;"></div>Predicted %</div>
+      <div style="display:flex;align-items:center;margin-right:16px;"><div style="width:12px;height:0;border-bottom:3px solid #F58518;margin-right:4px;"></div>Actual %</div>
+      <div style="display:flex;align-items:center;"><div style="width:12px;height:0;border-bottom:3px solid black;margin-right:4px;"></div>Workload %</div>
+    </div>
+    """, unsafe_allow_html=True)
+    # Bottom-Left: Workload Gauge & Fairness
+    with col3:
+        st.markdown('<div class="card"><div class="section-title">Workload & Distribution</div></div>', unsafe_allow_html=True)
+        avg_work = performance['Workload %'].mean()
+        gauge = go.Figure(go.Indicator(
+            mode='gauge+number', value=avg_work,
+            gauge={'axis':{'range':[0,100]},'bar':{'color':'rgba(39,39,39,0.9)'}, 'steps':[{'range':[0,60],'color':'#4bbd5e'},{'range':[60,80],'color':'#ffc107'},{'range':[80,100],'color':'#dc3545'}], 'threshold':{'line':{'color':'black','width':3},'thickness':0.75,'value':avg_work}}
+        ))
+        gauge.update_layout(margin=dict(l=0,r=0,t=15,b=0), height=240)
+        st.plotly_chart(gauge, use_container_width=True)
+        st.markdown('<div style="margin-top:10px;font-weight:600;">Task Distribution Fairness</div>', unsafe_allow_html=True)
+        st.progress(fairness_score)
+        st.markdown('<div style="margin-top:14px;text-align:center;font-weight:600;">Until Next Reporting Period</div>', unsafe_allow_html=True)
+        r1, r2 = st.columns(2, gap="small")
+        with r1: st.metric("Hours Available", f"{hours_available}h")
+        with r2: st.metric("Hours Required", f"{hours_required}h")
+with col4:
+    st.markdown('<div class="card"><div class="section-title">Insights & Suggestions</div></div>', unsafe_allow_html=True)
+    for i in insights:
+        st.markdown(f"- {i}")
